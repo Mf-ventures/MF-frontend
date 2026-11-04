@@ -7,12 +7,18 @@ import { getAdminStats, getEquipmentById, formatNaira, formatDate } from "@/dash
 import { EQUIPMENT_STATUS_LABEL } from "@/dashboard/data/labels";
 import type { EquipmentStatus, RepairRequest } from "@/dashboard/types";
 
-const EQUIPMENT_STATUSES: EquipmentStatus[] = ["operational", "under_maintenance", "out_of_service"];
+const EQUIPMENT_STATUSES: EquipmentStatus[] = [
+  "actively_working",
+  "idle",
+  "under_maintenance",
+  "off_hire",
+];
 
 const STATUS_BAR_COLOR: Record<EquipmentStatus, string> = {
-  operational: "bg-emerald-500",
+  actively_working: "bg-emerald-500",
+  idle: "bg-slate-400",
   under_maintenance: "bg-amber-500",
-  out_of_service: "bg-red-500",
+  off_hire: "bg-red-500",
 };
 
 export default function AdminDashboard() {
