@@ -1,6 +1,11 @@
 import { request } from "./client";
 import { mapRepairRequest, type RepairRequestOutDto } from "./repairRequests";
-import type { Equipment, EquipmentInput, EquipmentStatus, EquipmentUpdateInput } from "@/dashboard/types";
+import type {
+  Equipment,
+  EquipmentInput,
+  EquipmentStatus,
+  EquipmentUpdateInput,
+} from "@/dashboard/types";
 
 const MAX_PAGE_SIZE = 200;
 
@@ -11,6 +16,7 @@ interface EquipmentOutDto {
   serial_number: string | null;
   model_number: string | null;
   capacity_spec: string | null;
+  tonnage: number | null;
   current_location: string | null;
   assigned_site: string | null;
   next_maintenance_date: string | null;
@@ -35,6 +41,7 @@ function mapEquipment(dto: EquipmentOutDto): Equipment {
     serialNumber: dto.serial_number,
     modelNumber: dto.model_number,
     capacitySpec: dto.capacity_spec,
+    tonnage: dto.tonnage,
     currentLocation: dto.current_location,
     assignedSite: dto.assigned_site,
     status: dto.status,
@@ -54,16 +61,22 @@ function mapEquipmentDetail(dto: EquipmentDetailOutDto): Equipment {
 }
 
 export async function listEquipment(): Promise<Equipment[]> {
-  const dtos = await request<EquipmentOutDto[]>("/api/v1/equipment", { query: { page: 1, page_size: MAX_PAGE_SIZE } });
+  const dtos = await request<EquipmentOutDto[]>("/api/v1/equipment", {
+    query: { page: 1, page_size: MAX_PAGE_SIZE },
+  });
   return dtos.map(mapEquipment);
 }
 
 export async function getEquipment(equipmentId: string): Promise<Equipment> {
-  const dto = await request<EquipmentDetailOutDto>(`/api/v1/equipment/${equipmentId}`);
+  const dto = await request<EquipmentDetailOutDto>(
+    `/api/v1/equipment/${equipmentId}`,
+  );
   return mapEquipmentDetail(dto);
 }
 
-export async function createEquipment(input: EquipmentInput): Promise<Equipment> {
+export async function createEquipment(
+  input: EquipmentInput,
+): Promise<Equipment> {
   const dto = await request<EquipmentOutDto>("/api/v1/equipment", {
     method: "POST",
     body: {
@@ -73,28 +86,37 @@ export async function createEquipment(input: EquipmentInput): Promise<Equipment>
       serial_number: input.serialNumber || null,
       model_number: input.modelNumber || null,
       capacity_spec: input.capacitySpec || null,
+      tonnage: input.tonnage ?? null,
       current_location: input.currentLocation || null,
       assigned_site: input.assignedSite || null,
       next_maintenance_date: input.nextMaintenanceDate || null,
+      status: input.status || undefined,
     },
   });
   return mapEquipment(dto);
 }
 
-export async function updateEquipment(equipmentId: string, input: EquipmentUpdateInput): Promise<Equipment> {
-  const dto = await request<EquipmentOutDto>(`/api/v1/equipment/${equipmentId}`, {
-    method: "PATCH",
-    body: {
-      name: input.name,
-      equipment_type: input.equipmentType,
-      serial_number: input.serialNumber,
-      model_number: input.modelNumber,
-      capacity_spec: input.capacitySpec,
-      current_location: input.currentLocation,
-      assigned_site: input.assignedSite,
-      status: input.status,
-      next_maintenance_date: input.nextMaintenanceDate,
+export async function updateEquipment(
+  equipmentId: string,
+  input: EquipmentUpdateInput,
+): Promise<Equipment> {
+  const dto = await request<EquipmentOutDto>(
+    `/api/v1/equipment/${equipmentId}`,
+    {
+      method: "PATCH",
+      body: {
+        name: input.name,
+        equipment_type: input.equipmentType,
+        serial_number: input.serialNumber,
+        model_number: input.modelNumber,
+        capacity_spec: input.capacitySpec,
+        tonnage: input.tonnage,
+        current_location: input.currentLocation,
+        assigned_site: input.assignedSite,
+        status: input.status,
+        next_maintenance_date: input.nextMaintenanceDate,
+      },
     },
-  });
+  );
   return mapEquipment(dto);
 }

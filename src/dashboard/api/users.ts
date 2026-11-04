@@ -1,6 +1,11 @@
 import { request } from "./client";
 import { mapUser } from "./auth";
-import type { Role, User, UserCreateInput, UserUpdateInput } from "@/dashboard/types";
+import type {
+  Role,
+  User,
+  UserCreateInput,
+  UserUpdateInput,
+} from "@/dashboard/types";
 
 /** Backend caps page_size at 200 — this app fetches "everything" in one page rather than building paging UI, since fleet/staff counts stay well under that for the sites this system covers. */
 const MAX_PAGE_SIZE = 200;
@@ -17,7 +22,9 @@ interface UserOutDto {
 }
 
 export async function listUsers(): Promise<User[]> {
-  const dtos = await request<UserOutDto[]>("/api/v1/users", { query: { page: 1, page_size: MAX_PAGE_SIZE } });
+  const dtos = await request<UserOutDto[]>("/api/v1/users", {
+    query: { page: 1, page_size: MAX_PAGE_SIZE },
+  });
   return dtos.map(mapUser);
 }
 
@@ -36,7 +43,10 @@ export async function createUser(input: UserCreateInput): Promise<User> {
   return mapUser(dto);
 }
 
-export async function updateUser(userId: string, input: UserUpdateInput): Promise<User> {
+export async function updateUser(
+  userId: string,
+  input: UserUpdateInput,
+): Promise<User> {
   const dto = await request<UserOutDto>(`/api/v1/users/${userId}`, {
     method: "PATCH",
     body: {
@@ -46,6 +56,20 @@ export async function updateUser(userId: string, input: UserUpdateInput): Promis
       is_active: input.isActive,
       role: input.role,
     },
+  });
+  return mapUser(dto);
+}
+
+export async function archiveUser(userId: string): Promise<User> {
+  const dto = await request<UserOutDto>(`/api/v1/users/${userId}/archive`, {
+    method: "POST",
+  });
+  return mapUser(dto);
+}
+
+export async function unarchiveUser(userId: string): Promise<User> {
+  const dto = await request<UserOutDto>(`/api/v1/users/${userId}/unarchive`, {
+    method: "POST",
   });
   return mapUser(dto);
 }

@@ -11,6 +11,8 @@ import NotFound from "@/pages/NotFound";
 import EngineeringSupport from "@/pages/services/EngineeringSupport";
 import SecuritySupport from "@/pages/services/SecuritySupport";
 import ProcurementSupport from "@/pages/services/ProcurementSupport";
+import ForgotPassword from "@/dashboard/pages/ForgotPassword";
+import ResetPassword from "@/dashboard/pages/ResetPassword";
 
 import { DashboardProvider } from "@/dashboard/state/DashboardProvider";
 import { RequireAuth, RequireRole } from "@/dashboard/state/guards";
@@ -60,17 +62,17 @@ export default function App() {
           <Route
             path="/services/procurement-support"
             element={<ProcurementSupport />}
-         />
+          />
           <Route path="contact" element={<Contact />} />
           <Route path="login" element={<Login />} />
           <Route path="privacy-policy" element={<PrivacyPolicy />} />
           <Route path="*" element={<NotFound />} />
         </Route>
 
-        
         <Route element={<DashboardScope />}>
           <Route path="dashboard/login" element={<DashboardLogin />} />
-
+          <Route path="forgot-password" element={<ForgotPassword />} />
+          <Route path="reset-password" element={<ResetPassword />} />
           <Route
             path="dashboard"
             element={

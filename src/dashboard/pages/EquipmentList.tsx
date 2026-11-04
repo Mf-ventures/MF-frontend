@@ -2,15 +2,35 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui";
-import { PageHeader, DataTable, StatusBadge, EmptyState } from "@/dashboard/components";
+import {
+  PageHeader,
+  DataTable,
+  StatusBadge,
+  EmptyState,
+} from "@/dashboard/components";
 import type { Column } from "@/dashboard/components";
-import { useDashboardData } from "@/dashboard/state/DashboardProvider";
+import {
+  useDashboardData,
+  useDashboardSession,
+} from "@/dashboard/state/DashboardProvider";
 import { getErrorMessage } from "@/dashboard/state/DashboardProvider";
 import { formatDate, formatNaira } from "@/dashboard/data/selectors";
 import { EQUIPMENT_STATUS_LABEL } from "@/dashboard/data/labels";
 import type { Equipment, EquipmentStatus } from "@/dashboard/types";
 
-const STATUS_FILTERS: Array<EquipmentStatus | "All"> = ["All", "operational", "under_maintenance", "out_of_service"];
+const STATUS_FILTERS: Array<EquipmentStatus | "All"> = [
+  "All",
+  "actively_working",
+  "idle",
+  "under_maintenance",
+  "off_hire",
+];
+const STATUS_OPTIONS: EquipmentStatus[] = [
+  "actively_working",
+  "idle",
+  "under_maintenance",
+  "off_hire",
+];
 
 const EMPTY_FORM = {
   name: "",
@@ -18,27 +38,28 @@ const EMPTY_FORM = {
   serialNumber: "",
   modelNumber: "",
   capacitySpec: "",
+  tonnage: "",
   site: "",
   nextMaintenanceDate: "",
-  // Not yet accepted by the backend — captured here so the form is ready
-  // once that field exists, but it is never sent in the create payload.
-  tonnage: "",
+  status: "idle" as EquipmentStatus,
 };
 
 export default function EquipmentList() {
   const navigate = useNavigate();
-  const { equipment, equipmentLoading, refreshEquipment, addEquipment } = useDashboardData();
+  const { user } = useDashboardSession();
+  const { equipment, equipmentLoading, refreshEquipment, addEquipment } =
+    useDashboardData();
   const [loadError, setLoadError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<EquipmentStatus | "All">("All");
+  const canManageEquipment =
+    user?.role === "admin" || user?.role === "supervisor";
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Each visit to this page fetches the current list itself, rather than
-  // only relying on the one fetch that ran right after login.
   useEffect(() => {
     setLoadError(null);
     refreshEquipment().catch((err) => setLoadError(getErrorMessage(err)));
@@ -57,20 +78,37 @@ export default function EquipmentList() {
   }, [equipment, query, status]);
 
   const columns: Column<Equipment>[] = [
-    { header: "Equipment", cell: (eq) => <span className="font-semibold">{eq.name}</span> },
-    // Tonnage isn't part of the backend's equipment record yet, so there's
-    // nothing to display here until that field is added server-side.
-    { header: "Tonnage", cell: () => "—" },
+    {
+      header: "Equipment",
+      cell: (eq) => <span className="font-semibold">{eq.name}</span>,
+    },
+    {
+      header: "Tonnage",
+      cell: (eq) => (eq.tonnage != null ? `${eq.tonnage}t` : "—"),
+    },
     { header: "Registration", cell: (eq) => eq.registrationNumber },
     { header: "Site", cell: (eq) => eq.assignedSite ?? "—" },
     { header: "Status", cell: (eq) => <StatusBadge status={eq.status} /> },
-    { header: "Next Maintenance", cell: (eq) => formatDate(eq.nextMaintenanceDate) },
-    { header: "Total Cost", cell: (eq) => formatNaira(eq.totalMaintenanceCost) },
+    {
+      header: "Next Maintenance",
+      cell: (eq) => formatDate(eq.nextMaintenanceDate),
+    },
+    {
+      header: "Total Cost",
+      cell: (eq) => formatNaira(eq.totalMaintenanceCost),
+    },
   ];
 
   async function handleAddEquipment() {
     if (!form.name.trim() || !form.registrationNumber.trim()) {
       setFormError("Equipment name and registration number are required.");
+      return;
+    }
+    const tonnageValue = form.tonnage.trim()
+      ? Number(form.tonnage.trim())
+      : undefined;
+    if (tonnageValue !== undefined && Number.isNaN(tonnageValue)) {
+      setFormError("Tonnage must be a number.");
       return;
     }
     setSubmitting(true);
@@ -80,9 +118,11 @@ export default function EquipmentList() {
       serialNumber: form.serialNumber.trim() || undefined,
       modelNumber: form.modelNumber.trim() || undefined,
       capacitySpec: form.capacitySpec.trim() || undefined,
+      tonnage: tonnageValue,
       currentLocation: form.site.trim() || undefined,
       assignedSite: form.site.trim() || undefined,
       nextMaintenanceDate: form.nextMaintenanceDate || undefined,
+      status: form.status,
     });
     setSubmitting(false);
 
@@ -101,57 +141,106 @@ export default function EquipmentList() {
         title="Equipment Register"
         description="All registered equipment across sites."
         actions={
-          <Button size="md" onClick={() => setIsAddOpen((open) => !open)}>
-            {isAddOpen ? "Cancel" : "+ Add Equipment"}
-          </Button>
+          canManageEquipment && (
+            <Button size="md" onClick={() => setIsAddOpen((open) => !open)}>
+              {isAddOpen ? "Cancel" : "+ Add Equipment"}
+            </Button>
+          )
         }
       />
 
-      {isAddOpen && (
+      {canManageEquipment && isAddOpen && (
         <div className="rounded-lg border border-black/5 bg-white p-6 shadow-sm">
           <h2 className="text-base font-bold text-ink">Add equipment</h2>
           <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
             <Field label="Equipment Name">
-              <input type="text" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className={inputClass} />
+              <input
+                type="text"
+                value={form.name}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, name: e.target.value }))
+                }
+                className={inputClass}
+              />
             </Field>
-            <Field label="Registration Number">
+            <Field label="Registration Plate">
               <input
                 type="text"
                 value={form.registrationNumber}
-                onChange={(e) => setForm((f) => ({ ...f, registrationNumber: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, registrationNumber: e.target.value }))
+                }
                 className={inputClass}
               />
             </Field>
             <Field label="Serial Number">
-              <input type="text" value={form.serialNumber} onChange={(e) => setForm((f) => ({ ...f, serialNumber: e.target.value }))} className={inputClass} />
+              <input
+                type="text"
+                value={form.serialNumber}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, serialNumber: e.target.value }))
+                }
+                className={inputClass}
+              />
             </Field>
             <Field label="Model Number">
-              <input type="text" value={form.modelNumber} onChange={(e) => setForm((f) => ({ ...f, modelNumber: e.target.value }))} className={inputClass} />
+              <input
+                type="text"
+                value={form.modelNumber}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, modelNumber: e.target.value }))
+                }
+                className={inputClass}
+              />
             </Field>
-            <Field label="Capacity / Specification">
+            <Field label="Specification/Year">
               <input
                 type="text"
                 value={form.capacitySpec}
-                onChange={(e) => setForm((f) => ({ ...f, capacitySpec: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, capacitySpec: e.target.value }))
+                }
                 placeholder="e.g. 20 tonnes lifting capacity"
                 className={inputClass}
               />
             </Field>
             <Field label="Tonnage">
               <input
-                type="text"
+                type="number"
+                step="0.1"
                 value={form.tonnage}
-                onChange={(e) => setForm((f) => ({ ...f, tonnage: e.target.value }))}
-                placeholder="e.g. 20t"
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, tonnage: e.target.value }))
+                }
+                placeholder="e.g. 20"
                 className={inputClass}
               />
-              <span className="mt-1 block text-xs text-muted">Not yet saved — the system doesn't store tonnage separately yet.</span>
+            </Field>
+            <Field label="Status">
+              <select
+                value={form.status}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    status: e.target.value as EquipmentStatus,
+                  }))
+                }
+                className={inputClass}
+              >
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s} value={s}>
+                    {EQUIPMENT_STATUS_LABEL[s]}
+                  </option>
+                ))}
+              </select>
             </Field>
             <Field label="Location / Site">
               <input
                 type="text"
                 value={form.site}
-                onChange={(e) => setForm((f) => ({ ...f, site: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, site: e.target.value }))
+                }
                 placeholder="e.g. Lagos, Warri, Port Harcourt"
                 className={inputClass}
               />
@@ -160,15 +249,27 @@ export default function EquipmentList() {
               <input
                 type="date"
                 value={form.nextMaintenanceDate}
-                onChange={(e) => setForm((f) => ({ ...f, nextMaintenanceDate: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    nextMaintenanceDate: e.target.value,
+                  }))
+                }
                 className={inputClass}
               />
             </Field>
           </div>
 
-          {formError && <p className="mt-3 text-sm font-medium text-red-600">{formError}</p>}
+          {formError && (
+            <p className="mt-3 text-sm font-medium text-red-600">{formError}</p>
+          )}
 
-          <Button size="lg" className="mt-6 w-full justify-center uppercase tracking-wide" onClick={handleAddEquipment} disabled={submitting}>
+          <Button
+            size="lg"
+            className="mt-6 w-full justify-center uppercase tracking-wide"
+            onClick={handleAddEquipment}
+            disabled={submitting}
+          >
             {submitting ? "Adding…" : "Add Equipment"}
           </Button>
         </div>
@@ -189,7 +290,9 @@ export default function EquipmentList() {
               type="button"
               onClick={() => setStatus(s)}
               className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
-                status === s ? "bg-brand-blue text-white" : "bg-white text-ink/70 ring-1 ring-black/10 hover:bg-surface"
+                status === s
+                  ? "bg-brand-blue text-white"
+                  : "bg-white text-ink/70 ring-1 ring-black/10 hover:bg-surface"
               }`}
             >
               {s === "All" ? "All" : EQUIPMENT_STATUS_LABEL[s]}
@@ -207,7 +310,9 @@ export default function EquipmentList() {
             className="border border-red-300"
             onClick={() => {
               setLoadError(null);
-              refreshEquipment().catch((err) => setLoadError(getErrorMessage(err)));
+              refreshEquipment().catch((err) =>
+                setLoadError(getErrorMessage(err)),
+              );
             }}
           >
             Retry
@@ -236,7 +341,9 @@ const inputClass =
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-semibold tracking-wide text-muted uppercase">{label}</span>
+      <span className="mb-1.5 block text-xs font-semibold tracking-wide text-muted uppercase">
+        {label}
+      </span>
       {children}
     </label>
   );

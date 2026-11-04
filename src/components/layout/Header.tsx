@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, NavLink as RouterNavLink, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui";
 import { HERO_ROUTES, NAV_LINKS, SERVICE_LINKS } from "@/lib/nav";
-import logo from "@/assets/images/logo-mfventures.png";
+import logo from "@/assets/images/logo-mfventures.jpeg";
 import { cn } from "@/lib/cn";
 
 const SCROLL_THRESHOLD = 32;
@@ -41,18 +41,43 @@ export function Header() {
       )}
     >
       <div className="mx-auto flex h-full w-full max-w-(--container-page) items-center justify-between px-6 lg:px-8">
-        <Link to="/" className="flex shrink-0 items-center" aria-label="MF Ventures home">
-          <img
-            src={logo}
-            alt="MF Ventures"
-            className={cn("h-8 w-auto transition-all", isTransparent && "brightness-0 invert")}
-          />
+        <Link
+          to="/"
+          className="flex shrink-0 items-center gap-3"
+          aria-label="MF Ventures home"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm">
+            <img src={logo} alt="" className="h-7 w-7 object-contain" />
+          </span>
+          <span className="hidden flex-col leading-tight sm:flex">
+            <span
+              className={cn(
+                "text-base font-extrabold tracking-wide",
+                isTransparent ? "text-white" : "text-ink",
+              )}
+            >
+              MF VENTURES
+            </span>
+            <span
+              className={cn(
+                "text-[11px] font-medium tracking-wide uppercase",
+                isTransparent ? "text-brand-blue/90" : "text-brand-blue",
+              )}
+            >
+              Engineering · Procurement · Security
+            </span>
+          </span>
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">
           {NAV_LINKS.map((link) =>
             link.href === "/services" ? (
-              <ServicesNavItem key={link.href} label={link.label} href={link.href} isTransparent={isTransparent} />
+              <ServicesNavItem
+                key={link.href}
+                label={link.label}
+                href={link.href}
+                isTransparent={isTransparent}
+              />
             ) : (
               <RouterNavLink
                 key={link.href}
@@ -66,7 +91,11 @@ export function Header() {
                     isTransparent
                       ? "text-white/90 hover:text-white after:bg-white"
                       : "text-ink/80 hover:text-brand-blue after:bg-brand-blue",
-                    isActive && cn("font-semibold after:scale-x-100", isTransparent ? "text-white" : "text-brand-blue"),
+                    isActive &&
+                      cn(
+                        "font-semibold after:scale-x-100",
+                        isTransparent ? "text-white" : "text-brand-blue",
+                      ),
                   )
                 }
               >
@@ -106,7 +135,11 @@ export function Header() {
       </div>
 
       {isOpen && (
-        <nav id="mobile-nav" aria-label="Primary mobile" className="border-t border-black/5 bg-white md:hidden">
+        <nav
+          id="mobile-nav"
+          aria-label="Primary mobile"
+          className="border-t border-black/5 bg-white md:hidden"
+        >
           <div className="flex flex-col gap-1 px-6 py-4">
             {NAV_LINKS.map((link) =>
               link.href === "/services" ? (
@@ -117,19 +150,31 @@ export function Header() {
                       end
                       onClick={closeMenu}
                       className={({ isActive }) =>
-                        cn("flex-1 text-sm font-medium text-ink/80", isActive && "font-semibold text-brand-blue")
+                        cn(
+                          "flex-1 text-sm font-medium text-ink/80",
+                          isActive && "font-semibold text-brand-blue",
+                        )
                       }
                     >
                       {link.label}
                     </RouterNavLink>
                     <button
                       type="button"
-                      aria-label={mobileServicesOpen ? "Collapse services" : "Expand services"}
+                      aria-label={
+                        mobileServicesOpen
+                          ? "Collapse services"
+                          : "Expand services"
+                      }
                       aria-expanded={mobileServicesOpen}
                       onClick={() => setMobileServicesOpen((open) => !open)}
                       className="flex h-8 w-8 items-center justify-center text-ink/60"
                     >
-                      <ChevronIcon className={cn("transition-transform duration-200", mobileServicesOpen && "rotate-180")} />
+                      <ChevronIcon
+                        className={cn(
+                          "transition-transform duration-200",
+                          mobileServicesOpen && "rotate-180",
+                        )}
+                      />
                     </button>
                   </div>
                   {mobileServicesOpen && (
@@ -164,8 +209,15 @@ export function Header() {
                 </RouterNavLink>
               ),
             )}
-            <div className="mt-3 flex flex-col gap-2" onClickCapture={closeMenu}>
-              <Button to="/dashboard/login" variant="secondary" className="w-full border border-ink/10">
+            <div
+              className="mt-3 flex flex-col gap-2"
+              onClickCapture={closeMenu}
+            >
+              <Button
+                to="/dashboard/login"
+                variant="secondary"
+                className="w-full border border-ink/10"
+              >
                 Login
               </Button>
               <Button to="/contact" variant="primary" className="w-full">
@@ -180,7 +232,15 @@ export function Header() {
 }
 
 /** The "Service" nav item: a normal link that also reveals a dropdown of every service on hover or focus. */
-function ServicesNavItem({ label, href, isTransparent }: { label: string; href: string; isTransparent: boolean }) {
+function ServicesNavItem({
+  label,
+  href,
+  isTransparent,
+}: {
+  label: string;
+  href: string;
+  isTransparent: boolean;
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -190,7 +250,8 @@ function ServicesNavItem({ label, href, isTransparent }: { label: string; href: 
       onMouseLeave={() => setOpen(false)}
       onFocus={() => setOpen(true)}
       onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false);
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null))
+          setOpen(false);
       }}
     >
       <RouterNavLink
@@ -202,18 +263,29 @@ function ServicesNavItem({ label, href, isTransparent }: { label: string; href: 
             isTransparent
               ? "text-white/90 hover:text-white after:bg-white"
               : "text-ink/80 hover:text-brand-blue after:bg-brand-blue",
-            isActive && cn("font-semibold after:scale-x-100", isTransparent ? "text-white" : "text-brand-blue"),
+            isActive &&
+              cn(
+                "font-semibold after:scale-x-100",
+                isTransparent ? "text-white" : "text-brand-blue",
+              ),
           )
         }
       >
         {label}
-        <ChevronIcon className={cn("transition-transform duration-200", open && "rotate-180")} />
+        <ChevronIcon
+          className={cn(
+            "transition-transform duration-200",
+            open && "rotate-180",
+          )}
+        />
       </RouterNavLink>
 
       <div
         className={cn(
           "absolute top-full left-1/2 w-80 -translate-x-1/2 pt-3 transition-all duration-200 ease-out",
-          open ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-2 opacity-0",
+          open
+            ? "pointer-events-auto translate-y-0 opacity-100"
+            : "pointer-events-none -translate-y-2 opacity-0",
         )}
       >
         <div className="overflow-hidden rounded-xl border border-black/5 bg-white py-2 shadow-xl ring-1 ring-black/5">
@@ -238,15 +310,34 @@ function ServicesNavItem({ label, href, isTransparent }: { label: string; href: 
 
 function ChevronIcon({ className }: { className?: string }) {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" className={className}>
-      <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      className={className}
+    >
+      <path
+        d="M6 9l6 6 6-6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
 
 function ServiceIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
       <path
         d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.6 2.6-2.4-.6-.6-2.4 2.6-2.6z"
         stroke="currentColor"
@@ -260,14 +351,36 @@ function ServiceIcon() {
 function MenuIcon({ open }: { open: boolean }) {
   if (open) {
     return (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M6 6L18 18M18 6L6 18"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
       </svg>
     );
   }
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M4 6H20M4 12H20M4 18H20"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

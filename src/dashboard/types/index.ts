@@ -1,13 +1,4 @@
-// Core domain types for the Digital Equipment Maintenance & Approval System.
-//
-// These mirror the real backend's OpenAPI schema field-for-field (same enum
-// values, same optionality) with snake_case renamed to camelCase — nothing
-// more. Keeping them a direct mirror, rather than reshaping them into
-// friendlier names, is deliberate: it means the mapping code in
-// src/dashboard/api/*.ts is pure renaming with no translation to get wrong,
-// and a response the backend actually sends can never silently not match
-// what the UI expects. Human-readable labels for the enum values below live
-// in src/dashboard/data/labels.ts, kept separate from the types themselves.
+
 
 export type Role = "mechanic" | "supervisor" | "md" | "admin";
 
@@ -41,7 +32,13 @@ export interface UserUpdateInput {
   role?: Role;
 }
 
-export type EquipmentStatus = "operational" | "under_maintenance" | "out_of_service";
+export type EquipmentStatus =
+  | "actively_working"
+  | "idle"
+  | "under_maintenance"
+  | "off_hire";
+
+
 
 export interface Equipment {
   id: string;
@@ -51,6 +48,7 @@ export interface Equipment {
   serialNumber: string | null;
   modelNumber: string | null;
   capacitySpec: string | null;
+  tonnage: number | null;
   currentLocation: string | null;
   assignedSite: string | null;
   status: EquipmentStatus;
@@ -71,8 +69,10 @@ export interface EquipmentInput {
   serialNumber?: string;
   modelNumber?: string;
   capacitySpec?: string;
+  tonnage?: number;
   currentLocation?: string;
   assignedSite?: string;
+  status?: EquipmentStatus;
   /** ISO date (YYYY-MM-DD), not a full datetime. */
   nextMaintenanceDate?: string;
 }
@@ -84,13 +84,17 @@ export interface EquipmentUpdateInput {
   serialNumber?: string;
   modelNumber?: string;
   capacitySpec?: string;
+  tonnage?: number;
   currentLocation?: string;
   assignedSite?: string;
   status?: EquipmentStatus;
   nextMaintenanceDate?: string;
 }
 
-export type FaultType = "corrective_maintenance" | "preventive_maintenance" | "emergency_repair";
+export type FaultType =
+  | "corrective_maintenance"
+  | "preventive_maintenance"
+  | "emergency_repair";
 export type Priority = "low" | "medium" | "high" | "critical";
 
 export type RepairStatus =

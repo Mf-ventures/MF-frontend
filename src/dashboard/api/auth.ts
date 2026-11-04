@@ -39,3 +39,20 @@ export async function me(): Promise<User> {
   const dto = await request<UserOutDto>("/api/v1/auth/me");
   return mapUser(dto);
 }
+
+export async function forgotPassword(email: string): Promise<void> {
+  await request<void>("/api/v1/auth/forgot-password", {
+    method: "POST",
+    body: { email },
+  });
+}
+
+export async function resetPassword(
+  token: string,
+  newPassword: string,
+): Promise<void> {
+  await request<void>("/api/v1/auth/reset-password", {
+    method: "POST",
+    body: { token, new_password: newPassword },
+  });
+}

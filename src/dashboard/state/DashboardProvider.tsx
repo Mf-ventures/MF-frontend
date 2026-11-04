@@ -3,7 +3,11 @@ import type { ReactNode } from "react";
 import { login as apiLogin, me as apiMe } from "@/dashboard/api/auth";
 import { clearTokens, getRefreshToken } from "@/dashboard/api/tokens";
 import { refreshAccessToken, ApiError } from "@/dashboard/api/client";
-import { createEquipment, listEquipment } from "@/dashboard/api/equipment";
+import {
+  createEquipment,
+  listEquipment,
+  updateEquipment as apiUpdateEquipment,
+} from "@/dashboard/api/equipment";
 import {
   cancelRepairRequest as apiCancelRepairRequest,
   createRepairRequest,
@@ -11,6 +15,8 @@ import {
   listRepairRequests,
   assignMechanic as apiAssignMechanic,
   setEstimatedCost as apiSetEstimatedCost,
+  updateRepairRequest as apiUpdateRepairRequest,
+  submitRepairRequest as apiSubmitRepairRequest,
 } from "@/dashboard/api/repairRequests";
 import { decideAsMd, decideAsSupervisor, getApprovalQueue } from "@/dashboard/api/approvals";
 import {
@@ -35,7 +41,9 @@ import type {
   FaultReportInput,
   Notification,
   RepairActionInput,
+  EquipmentUpdateInput,
   RepairRequest,
+  RepairRequestUpdateInput,
   User,
   UserCreateInput,
 } from "@/dashboard/types";
@@ -50,9 +58,11 @@ export function getErrorMessage(err: unknown): string {
 interface DashboardContextValue {
   // Session
   currentUser: User | null;
-  /** True until the silent session-restore check (via the stored refresh token) has resolved, one way or the other. */
   authReady: boolean;
-  login: (email: string, password: string) => Promise<{ ok: true } | { ok: false; error: string }>;
+  login: (
+    email: string,
+    password: string,
+  ) => Promise<{ ok: true } | { ok: false; error: string }>;
   logout: () => void;
 
   // Reference data — fetched once a session exists, refreshed after relevant mutations.
@@ -63,7 +73,7 @@ interface DashboardContextValue {
   repairRequests: RepairRequest[];
   repairRequestsLoading: boolean;
   refreshRepairRequests: () => Promise<void>;
-  /** Fetches one request's full detail (attachments, actions, approvals, audit trail) and merges it into the shared list. */
+
   loadRepairRequestDetail: (requestId: string) => Promise<RepairRequest>;
 
   approvalQueue: RepairRequest[];
@@ -79,24 +89,46 @@ interface DashboardContextValue {
   usersLoading: boolean;
   refreshUsers: () => Promise<void>;
 
-  // Maintenance-due alerts — computed client-side from equipment.nextMaintenanceDate;
-  // the backend has no such notification type. Dismissal is kept per-browser.
   maintenanceAlerts: MaintenanceAlert[];
   dismissMaintenanceAlert: (alert: MaintenanceAlert) => void;
 
   // Mutations
-  addEquipment: (input: EquipmentInput) => Promise<Equipment | { error: string }>;
+  addEquipment: (
+    input: EquipmentInput,
+  ) => Promise<Equipment | { error: string }>;
+  updateEquipmentRecord: (
+    equipmentId: string,
+    input: EquipmentUpdateInput,
+  ) => Promise<Equipment | { error: string }>;
   addUser: (input: UserCreateInput) => Promise<User | { error: string }>;
-  submitFaultReport: (input: FaultReportInput) => Promise<RepairRequest | { error: string }>;
-  decideSupervisor: (requestId: string, decision: ApprovalDecision, comment: string) => Promise<void>;
-  decideMd: (requestId: string, decision: ApprovalDecision, comment: string) => Promise<void>;
-  addRepairAction: (requestId: string, input: RepairActionInput) => Promise<void>;
+  submitFaultReport: (
+    input: FaultReportInput,
+  ) => Promise<RepairRequest | { error: string }>;
+  decideSupervisor: (
+    requestId: string,
+    decision: ApprovalDecision,
+    comment: string,
+  ) => Promise<void>;
+  decideMd: (
+    requestId: string,
+    decision: ApprovalDecision,
+    comment: string,
+  ) => Promise<void>;
+  addRepairAction: (
+    requestId: string,
+    input: RepairActionInput,
+  ) => Promise<void>;
   setPendingParts: (requestId: string, note?: string) => Promise<void>;
   resumeRepair: (requestId: string) => Promise<void>;
   startRepair: (requestId: string) => Promise<void>;
   completeRepair: (requestId: string, finalNotes?: string) => Promise<void>;
   closeRepair: (requestId: string) => Promise<void>;
   cancelRepairRequest: (requestId: string, reason?: string) => Promise<void>;
+  editAndResubmitRepairRequest: (
+    requestId: string,
+    input: RepairRequestUpdateInput,
+  ) => Promise<void>;
+
   assignMechanic: (requestId: string, mechanicId: string) => Promise<void>;
   setEstimatedCost: (requestId: string, amount: number) => Promise<void>;
 }
@@ -122,8 +154,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [users, setUsers] = useState<User[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
 
-  // Bumped on every dismissal so the derived alert list below recomputes —
-  // the dismissal itself lives in localStorage, which React doesn't watch.
+  
   const [maintenanceAlertsTick, setMaintenanceAlertsTick] = useState(0);
 
   // On mount, try to silently restore a session from the stored refresh
@@ -200,9 +231,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     try {
       setUsers(await listUsers());
     } catch (err) {
-      // Listing users may be restricted to admins — every other role simply
-      // can't resolve "who reported this" to a name and falls back to
-      // showing the raw id, rather than breaking the page.
+      
       if (err instanceof ApiError && (err.status === 403 || err.status === 401)) {
         setUsers([]);
       } else {
@@ -213,7 +242,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  /** Fetches one request's full detail and replaces (or inserts) it in the shared list by id. */
+  
   const loadRepairRequestDetail = useCallback(async (requestId: string): Promise<RepairRequest> => {
     const detail = await getRepairRequest(requestId);
     setRepairRequests((prev) => {
@@ -234,8 +263,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setMaintenanceAlertsTick((tick) => tick + 1);
   }, []);
 
-  // Once signed in, load everything the dashboard needs. A fresh login and
-  // a restored session both land here via the currentUser change.
+  
   useEffect(() => {
     if (!currentUser) return;
     refreshEquipment();
@@ -273,6 +301,19 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       return { error: getErrorMessage(err) };
     }
   }, []);
+
+  const updateEquipmentRecord = useCallback(
+    async (equipmentId: string, input: EquipmentUpdateInput): Promise<Equipment | { error: string }> => {
+      try {
+        const updated = await apiUpdateEquipment(equipmentId, input);
+        setEquipment((prev) => prev.map((eq) => (eq.id === equipmentId ? updated : eq)));
+        return updated;
+      } catch (err) {
+        return { error: getErrorMessage(err) };
+      }
+    },
+    [],
+  );
 
   const addUser = useCallback(async (input: UserCreateInput): Promise<User | { error: string }> => {
     try {
@@ -366,6 +407,15 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     [loadRepairRequestDetail],
   );
 
+  const editAndResubmitRepairRequest = useCallback(
+    async (requestId: string, input: RepairRequestUpdateInput) => {
+      await apiUpdateRepairRequest(requestId, input);
+      await apiSubmitRepairRequest(requestId);
+      await loadRepairRequestDetail(requestId);
+    },
+    [loadRepairRequestDetail],
+  );
+
   const assignMechanic = useCallback(
     async (requestId: string, mechanicId: string) => {
       await apiAssignMechanic(requestId, mechanicId);
@@ -417,6 +467,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       maintenanceAlerts,
       dismissMaintenanceAlert,
       addEquipment,
+      updateEquipmentRecord,
       addUser,
       submitFaultReport,
       decideSupervisor,
@@ -428,6 +479,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       completeRepair,
       closeRepair,
       cancelRepairRequest,
+      editAndResubmitRepairRequest,
       assignMechanic,
       setEstimatedCost,
     }),
@@ -456,6 +508,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       maintenanceAlerts,
       dismissMaintenanceAlert,
       addEquipment,
+      updateEquipmentRecord,
       addUser,
       submitFaultReport,
       decideSupervisor,
@@ -467,6 +520,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       completeRepair,
       closeRepair,
       cancelRepairRequest,
+      editAndResubmitRepairRequest,
       assignMechanic,
       setEstimatedCost,
     ],
@@ -508,6 +562,7 @@ export function useDashboardData() {
     maintenanceAlerts,
     dismissMaintenanceAlert,
     addEquipment,
+    updateEquipmentRecord,
     addUser,
     submitFaultReport,
     decideSupervisor,
@@ -519,6 +574,7 @@ export function useDashboardData() {
     completeRepair,
     closeRepair,
     cancelRepairRequest,
+    editAndResubmitRepairRequest,
     assignMechanic,
     setEstimatedCost,
   } = useDashboardContext();
@@ -544,6 +600,7 @@ export function useDashboardData() {
     maintenanceAlerts,
     dismissMaintenanceAlert,
     addEquipment,
+    updateEquipmentRecord,
     addUser,
     submitFaultReport,
     decideSupervisor,
@@ -555,6 +612,7 @@ export function useDashboardData() {
     completeRepair,
     closeRepair,
     cancelRepairRequest,
+    editAndResubmitRepairRequest,
     assignMechanic,
     setEstimatedCost,
   };

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui";
 import { useDashboardSession } from "@/dashboard/state/DashboardProvider";
 import logo from "@/assets/images/logo-mfventures.png";
@@ -34,12 +34,19 @@ export default function Login() {
         </div>
 
         <div className="rounded-xl bg-white p-8 shadow-sm ring-1 ring-black/5">
-          <h1 className="text-xl font-extrabold text-ink">Sign in to your dashboard</h1>
-          <p className="mt-1 text-sm text-muted">Equipment Maintenance & Approval System</p>
+          <h1 className="text-xl font-extrabold text-ink">
+            Sign in to your dashboard
+          </h1>
+          <p className="mt-1 text-sm text-muted">
+            Equipment Maintenance & Approval System
+          </p>
 
           <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-4">
             <div>
-              <label htmlFor="email" className="mb-1.5 block text-sm font-semibold text-ink">
+              <label
+                htmlFor="email"
+                className="mb-1.5 block text-sm font-semibold text-ink"
+              >
                 Email
               </label>
               <input
@@ -55,7 +62,10 @@ export default function Login() {
             </div>
 
             <div>
-              <label htmlFor="password" className="mb-1.5 block text-sm font-semibold text-ink">
+              <label
+                htmlFor="password"
+                className="mb-1.5 block text-sm font-semibold text-ink"
+              >
                 Password
               </label>
               <input
@@ -68,9 +78,19 @@ export default function Login() {
                 placeholder="••••••••"
                 className="w-full rounded-md border border-black/10 bg-surface px-4 py-3 text-sm text-ink placeholder:text-muted/70 focus:border-brand-blue focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
               />
+              <div className="mt-2 text-right">
+                <Link
+                  to="/forgot-password"
+                  className="text-xs font-semibold text-brand-blue hover:underline"
+                >
+                   Forgot password? 
+                </Link>
+              </div>
             </div>
 
-            {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+            {error && (
+              <p className="text-sm font-medium text-red-600">{error}</p>
+            )}
 
             <Button type="submit" className="w-full" disabled={submitting}>
               {submitting ? "Signing in…" : "Sign In"}
@@ -78,7 +98,9 @@ export default function Login() {
           </form>
         </div>
 
-        <p className="mt-6 text-center text-xs text-muted">Having trouble signing in? Contact your administrator.</p>
+        <p className="mt-6 text-center text-xs text-muted">
+          Having trouble signing in? Contact your administrator.
+        </p>
       </div>
     </div>
   );

@@ -1,8 +1,13 @@
-// Human-readable labels and badge colors for every backend enum. Kept
-// separate from src/dashboard/types/index.ts so the types themselves stay a
-// plain mirror of the API schema — this file is the only place a display
-// string is allowed to drift from the raw value.
-import type { ApprovalDecision, EquipmentStatus, FaultType, NotificationType, Priority, Role, RepairStatus } from "@/dashboard/types";
+
+import type {
+  ApprovalDecision,
+  EquipmentStatus,
+  FaultType,
+  NotificationType,
+  Priority,
+  Role,
+  RepairStatus,
+} from "@/dashboard/types";
 
 export const ROLE_LABEL: Record<Role, string> = {
   mechanic: "Mechanic",
@@ -62,15 +67,17 @@ export const REPAIR_STATUS_STYLE: Record<RepairStatus, string> = {
 };
 
 export const EQUIPMENT_STATUS_LABEL: Record<EquipmentStatus, string> = {
-  operational: "Actively Working",
-  under_maintenance: "Idle",
-  out_of_service: "Out of Service",
+  actively_working: "Actively Working",
+  idle: "Idle",
+  under_maintenance: "Under Maintenance",
+  off_hire: "Off Hire",
 };
 
 export const EQUIPMENT_STATUS_STYLE: Record<EquipmentStatus, string> = {
-  operational: "bg-emerald-50 text-emerald-700",
+  actively_working: "bg-emerald-50 text-emerald-700",
+  idle: "bg-slate-100 text-slate-600",
   under_maintenance: "bg-amber-50 text-amber-700",
-  out_of_service: "bg-red-50 text-red-700",
+  off_hire: "bg-red-50 text-red-700",
 };
 
 export const NOTIFICATION_TYPE_LABEL: Record<NotificationType, string> = {

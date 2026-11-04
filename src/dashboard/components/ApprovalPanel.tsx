@@ -8,12 +8,7 @@ interface ApprovalPanelProps {
   onDecide: (decision: ApprovalDecision, comment: string) => Promise<void>;
 }
 
-/**
- * The Approve / Reject or Return / Request More Information action used on
- * the Repair Request Detail page. Shown only when the signed-in user is the
- * one authorised to act on this request at its current stage — that check
- * happens in the parent, this component just renders the decision itself.
- */
+
 export function ApprovalPanel({ stage, onDecide }: ApprovalPanelProps) {
   const [comment, setComment] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -21,8 +16,8 @@ export function ApprovalPanel({ stage, onDecide }: ApprovalPanelProps) {
   const [recorded, setRecorded] = useState<ApprovalDecision | null>(null);
 
   async function handleDecide(decision: ApprovalDecision) {
-    if (decision !== "approve" && comment.trim().length === 0) {
-      setError("Add a comment so the mechanic knows what to fix or clarify.");
+    if (decision === "reject_return" && comment.trim().length === 0) {
+      setError("Add a comment so the mechanic knows what to fix.");
       return;
     }
     setError(null);
@@ -31,7 +26,11 @@ export function ApprovalPanel({ stage, onDecide }: ApprovalPanelProps) {
       await onDecide(decision, comment.trim());
       setRecorded(decision);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again.",
+      );
     } finally {
       setSubmitting(null);
     }
@@ -49,38 +48,45 @@ export function ApprovalPanel({ stage, onDecide }: ApprovalPanelProps) {
 
   return (
     <div className="rounded-lg border border-brand-blue/20 bg-brand-blue/5 p-5">
-      <h2 className="text-sm font-semibold text-ink">{stageLabel} Decision Required</h2>
+      <h2 className="text-sm font-semibold text-ink">
+        {stageLabel} Decision Required
+      </h2>
       <p className="mt-1 text-sm text-muted">
-        Approve to move this request forward, or send it back with a comment explaining what's needed.
+        Approve to move this request forward, or reject and return it with a
+        comment explaining what needs to change.
       </p>
 
       <label className="mt-4 block">
-        <span className="mb-1.5 block text-xs font-medium tracking-wide text-muted uppercase">Comment</span>
+        <span className="mb-1.5 block text-xs font-medium tracking-wide text-muted uppercase">
+          Comment
+        </span>
         <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           rows={3}
-          placeholder="Required for Reject / Return or Request More Information"
+          placeholder="Required for Reject / Return"
           className="w-full rounded-md border border-black/10 bg-white px-3 py-2 text-sm text-ink placeholder:text-muted/60 focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
         />
       </label>
 
-      {error && <p className="mt-2 text-sm font-medium text-red-600">{error}</p>}
+      {error && (
+        <p className="mt-2 text-sm font-medium text-red-600">{error}</p>
+      )}
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <Button size="md" onClick={() => handleDecide("approve")} disabled={submitting !== null}>
+        <Button
+          size="md"
+          onClick={() => handleDecide("approve")}
+          disabled={submitting !== null}
+        >
           {submitting === "approve" ? "Approving…" : "Approve Repair"}
         </Button>
         <Button
-          variant="secondary"
+          variant="danger"
           size="md"
-          className="border border-amber-300"
-          onClick={() => handleDecide("request_info")}
+          onClick={() => handleDecide("reject_return")}
           disabled={submitting !== null}
         >
-          {submitting === "request_info" ? "Sending…" : "Request More Information"}
-        </Button>
-        <Button variant="danger" size="md" onClick={() => handleDecide("reject_return")} disabled={submitting !== null}>
           {submitting === "reject_return" ? "Recording…" : "Reject / Return"}
         </Button>
       </div>
