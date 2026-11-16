@@ -106,14 +106,6 @@ export function Header() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Button
-            to="/dashboard/login"
-            variant={isTransparent ? "outline-light" : "secondary"}
-            size="md"
-            className={isTransparent ? undefined : "border border-ink/10"}
-          >
-            Login
-          </Button>
           <Button to="/contact" variant="primary" size="md">
             Request a Quote
           </Button>
