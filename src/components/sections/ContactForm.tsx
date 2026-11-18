@@ -3,7 +3,7 @@ import type { FormEvent, ReactNode } from "react";
 import { Button } from "@/components/ui";
 
 const API_BASE =
-  import.meta.env.VITE_API_BASE_URL ?? "https://mf-ventures.duckdns.org:8050";
+  import.meta.env.VITE_API_BASE_URL;
 
 interface FormState {
   name: string;
