@@ -1,6 +1,6 @@
 import { Button, Eyebrow } from "@/components/ui";
 import { Section } from "@/components/ui";
-import photo from "@/assets/images/Who-we-are-home.jpeg";
+import photo from "@/assets/images/who-we-are-home.jpeg";
 
 export function WhoWeAre() {
   return (
