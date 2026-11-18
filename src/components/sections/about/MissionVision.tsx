@@ -1,6 +1,6 @@
 import { Section } from "@/components/ui";
-import missionPhoto from "@/assets/images/mission-photo.png";
-import visionPhoto from "@/assets/images/vision-photo.png";
+import missionPhoto from "@/assets/images/contact-image.jpeg";
+import visionPhoto from "@/assets/images/contact-workers.jpeg";
 
 export function MissionVision() {
   return (

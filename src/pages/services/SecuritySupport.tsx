@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Button, Card, Eyebrow, Reveal, Section } from "@/components/ui";
-import heroPhoto from "@/assets/images/service-project.png";
+import heroPhoto from "@/assets/images/service-project.jpeg";
 
 interface Capability {
   icon: ReactNode;

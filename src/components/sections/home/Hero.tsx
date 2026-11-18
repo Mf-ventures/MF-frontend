@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import heroWorker from "@/assets/images/hero-worker.jpeg";
-import whoWeAre from "@/assets/images/who-we-are-home.png";
-import contactWorkers from "@/assets/images/contact-workers.jpeg";
-import aboutHero from "@/assets/images/about-hero.png";
+import whoWeAre from "@/assets/images/who-we-are-home.jpeg";
+import contactWorkers from "@/assets/images/contact-image.jpeg";
+import aboutHero from "@/assets/images/about-hero.jpeg";
 
 const SLIDES = [heroWorker, whoWeAre, contactWorkers, aboutHero];
 const SLIDE_DURATION_MS = 2000;

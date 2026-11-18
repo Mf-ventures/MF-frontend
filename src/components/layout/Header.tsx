@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, NavLink as RouterNavLink, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui";
 import { HERO_ROUTES, NAV_LINKS, SERVICE_LINKS } from "@/lib/nav";
-import logo from "@/assets/images/logo-mfventures.jpeg";
+import logo from "@/assets/images/logo-mfventures.png";
 import { cn } from "@/lib/cn";
 
 const SCROLL_THRESHOLD = 32;
@@ -43,30 +43,17 @@ export function Header() {
       <div className="mx-auto flex h-full w-full max-w-(--container-page) items-center justify-between px-6 lg:px-8">
         <Link
           to="/"
-          className="flex shrink-0 items-center gap-3"
+          className="flex shrink-0 items-center"
           aria-label="MF Ventures home"
         >
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm">
-            <img src={logo} alt="" className="h-7 w-7 object-contain" />
-          </span>
-          <span className="hidden flex-col leading-tight sm:flex">
-            <span
-              className={cn(
-                "text-base font-extrabold tracking-wide",
-                isTransparent ? "text-white" : "text-ink",
-              )}
-            >
-              MF VENTURES
-            </span>
-            <span
-              className={cn(
-                "text-[11px] font-medium tracking-wide uppercase",
-                isTransparent ? "text-brand-blue/90" : "text-brand-blue",
-              )}
-            >
-              Engineering · Procurement · Security
-            </span>
-          </span>
+          <img
+            src={logo}
+            alt="MF Ventures Services Limited"
+            className={cn(
+              "h-9 w-auto object-contain transition-[filter] duration-300 sm:h-10",
+              isTransparent && "brightness-0 invert",
+            )}
+          />
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">

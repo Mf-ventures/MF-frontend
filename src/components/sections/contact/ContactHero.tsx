@@ -1,4 +1,4 @@
-import photo from "@/assets/images/contact-workers.png";
+import photo from "@/assets/images/contact-worker.jpeg";
 
 export function ContactHero() {
   return (

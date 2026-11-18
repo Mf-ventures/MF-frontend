@@ -1,6 +1,6 @@
 import { Eyebrow, Section } from "@/components/ui";
 import { ContactForm } from "@/components/sections/ContactForm";
-import photo from "@/assets/images/contact-workers.png";
+import photo from "@/assets/images/contact-image.jpeg";
 
 export function ContactCTA() {
   return (

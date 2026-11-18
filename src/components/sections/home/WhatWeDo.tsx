@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 import { Button, Eyebrow } from "@/components/ui";
 import { Section } from "@/components/ui";
 import engineeringPhoto from "@/assets/images/service-engineering.jpeg";
-import procurementPhoto from "@/assets/images/service-procurement.png";
-import projectPhoto from "@/assets/images/service-project.png";
+import procurementPhoto from "@/assets/images/service-procurement.jpeg";
+import projectPhoto from "@/assets/images/service-project.jpeg";
 
 interface ServiceCard {
   image: string;
