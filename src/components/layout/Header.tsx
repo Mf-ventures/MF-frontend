@@ -62,7 +62,9 @@ export function Header() {
               <ServicesNavItem
                 key={link.href}
                 label={link.label}
-                href={link.href}
+                isActive={
+                  pathname === link.href || pathname.startsWith(`${link.href}/`)
+                }
                 isTransparent={isTransparent}
               />
             ) : (
@@ -124,19 +126,18 @@ export function Header() {
               link.href === "/services" ? (
                 <div key={link.href}>
                   <div className="flex items-center justify-between rounded-md px-3 py-2.5">
-                    <RouterNavLink
-                      to={link.href}
-                      end
-                      onClick={closeMenu}
-                      className={({ isActive }) =>
-                        cn(
-                          "flex-1 text-sm font-medium text-ink/80",
-                          isActive && "font-semibold text-brand-blue",
-                        )
-                      }
+                    <button
+                      type="button"
+                      onClick={() => setMobileServicesOpen((open) => !open)}
+                      className={cn(
+                        "flex-1 text-left text-sm font-medium text-ink/80",
+                        (pathname === link.href ||
+                          pathname.startsWith(`${link.href}/`)) &&
+                          "font-semibold text-brand-blue",
+                      )}
                     >
                       {link.label}
-                    </RouterNavLink>
+                    </button>
                     <button
                       type="button"
                       aria-label={
@@ -210,14 +211,14 @@ export function Header() {
   );
 }
 
-/** The "Service" nav item: a normal link that also reveals a dropdown of every service on hover or focus. */
+/** The "Service" nav item: hover (or tap) reveals a dropdown of every service. It never navigates itself. */
 function ServicesNavItem({
   label,
-  href,
+  isActive,
   isTransparent,
 }: {
   label: string;
-  href: string;
+  isActive: boolean;
   isTransparent: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -233,22 +234,21 @@ function ServicesNavItem({
           setOpen(false);
       }}
     >
-      <RouterNavLink
-        to={href}
-        end
-        className={({ isActive }) =>
-          cn(
-            "relative flex items-center gap-1.5 pb-1 text-sm font-medium transition-colors after:absolute after:inset-x-0 after:-bottom-1 after:h-0.5 after:scale-x-0 after:rounded-full after:transition-transform after:content-['']",
-            isTransparent
-              ? "text-white/90 hover:text-white after:bg-white"
-              : "text-ink/80 hover:text-brand-blue after:bg-brand-blue",
-            isActive &&
-              cn(
-                "font-semibold after:scale-x-100",
-                isTransparent ? "text-white" : "text-brand-blue",
-              ),
-          )
-        }
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className={cn(
+          "relative flex items-center gap-1.5 pb-1 text-sm font-medium transition-colors after:absolute after:inset-x-0 after:-bottom-1 after:h-0.5 after:scale-x-0 after:rounded-full after:transition-transform after:content-['']",
+          isTransparent
+            ? "text-white/90 hover:text-white after:bg-white"
+            : "text-ink/80 hover:text-brand-blue after:bg-brand-blue",
+          isActive &&
+            cn(
+              "font-semibold after:scale-x-100",
+              isTransparent ? "text-white" : "text-brand-blue",
+            ),
+        )}
       >
         {label}
         <ChevronIcon
@@ -257,7 +257,7 @@ function ServicesNavItem({
             open && "rotate-180",
           )}
         />
-      </RouterNavLink>
+      </button>
 
       <div
         className={cn(
